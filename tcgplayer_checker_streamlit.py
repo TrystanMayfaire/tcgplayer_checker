@@ -141,8 +141,11 @@ if st.button("🔍 Check Availability"):
             results = []
             current_deck = "Uncategorized"
 
-            # Inform user search is starting
+            # Ongoing search information
             status_container = st.status("Searching cards...", expanded=True)
+            with status_container:
+                deck_display = st.empty()  # Reserved spot for Deck Name
+                card_display = st.empty()  # Reserved spot for Card Name
 
             # Show progress bar
             progress_bar = st.progress(0)
@@ -153,13 +156,16 @@ if st.button("🔍 Check Availability"):
             for idx, item in enumerate(input_links):
                 if item.startswith("Deck:"):
                     current_deck = item.replace("Deck:", "").strip()
-                    status_container.write(f"📂 **Deck: {current_deck}**")
+                    deck_display.markdown(f"📂 **Deck: {current_deck}**")
                     continue
+
+                if current_deck_name != "Uncategorized":
+                    deck_display.markdown(f"📂 **Deck: {current_deck}**")
 
                 raw_query = item.split("?q=")[-1]
                 clean_card_name = unquote(raw_query).replace('+', ' ').split('&')[0]
 
-                status_container.write(f"Checking: {clean_card_name}...")
+                card_display.info(f"Searching: **{clean_card_name}**")
 
                 count = perform_search(driver, item, clean_card_name)
 
@@ -171,7 +177,14 @@ if st.button("🔍 Check Availability"):
                         "URL": item
                     })
                     # Update the table placeholder (which is outside the status block)
-                    table_placeholder.dataframe(results, use_container_width=True)
+                    table_placeholder.dataframe(
+                        results,
+                        column_config={
+                            "URL": st.column_config.LinkColumn("URL", display_text="View on TCGPlayer")
+                        },
+                        hide_index=True,
+                        use_container_width=True
+                    )
 
                 progress_bar.progress((idx + 1) / len(input_links))
                 time.sleep(delay)
