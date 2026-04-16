@@ -1,0 +1,12 @@
+# PyCharm
+.idea/
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+env/
+
+# Local Data
+*.docx
+*.txt
