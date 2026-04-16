@@ -156,11 +156,11 @@ if st.button("🔍 Check Availability"):
             for idx, item in enumerate(input_links):
                 if item.startswith("Deck:"):
                     current_deck_name = item.replace("Deck:", "").strip()
-                    deck_display.markdown(f"📂 **Deck: {current_deck}**")
+                    deck_display.markdown(f"📂 **Deck: {current_deck_name}**")
                     continue
 
                 if current_deck_name != "Uncategorized":
-                    deck_display.markdown(f"📂 **Deck: {current_deck}**")
+                    deck_display.markdown(f"📂 **Deck: {current_deck_name}**")
 
                 raw_query = item.split("?q=")[-1]
                 clean_card_name = unquote(raw_query).replace('+', ' ').split('&')[0]
@@ -171,7 +171,7 @@ if st.button("🔍 Check Availability"):
 
                 if count > 0:
                     results.append({
-                        "Deck": current_deck,
+                        "Deck": current_deck_name,
                         "Card": clean_card_name,
                         "Count": count,
                         "URL": item
