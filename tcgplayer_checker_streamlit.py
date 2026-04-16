@@ -141,6 +141,10 @@ if st.button("🔍 Check Availability"):
             results = []
             current_deck_name = "Uncategorized"
 
+            # Calculate total cards (excluding "Deck:" markers) for the counter
+            total_cards = len([link for link in input_links if not link.startswith("Deck:")])
+            cards_processed = 0
+
             # Ongoing search information
             status_container = st.status("Searching cards...", expanded=True)
             with status_container:
@@ -162,6 +166,12 @@ if st.button("🔍 Check Availability"):
                 if current_deck_name != "Uncategorized":
                     deck_display.markdown(f"📂 **Deck: {current_deck_name}**")
 
+                # Increment processed count for the counter
+                cards_processed += 1
+
+                # Update the status bar label with the (X of Y) counter
+                status_container.update(label=f"Searching cards ({cards_processed} of {total_cards})...")
+                
                 raw_query = item.split("?q=")[-1]
                 clean_card_name = unquote(raw_query).replace('+', ' ').split('&')[0]
 
