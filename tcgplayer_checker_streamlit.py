@@ -146,29 +146,29 @@ if st.button("🔍 Check Availability"):
                 table_placeholder = st.empty()
 
                 for idx, item in enumerate(input_links):
-                if item.startswith("Deck:"):
-                    current_deck = item.replace("Deck:", "").strip()
-                    continue
+                    if item.startswith("Deck:"):
+                        current_deck = item.replace("Deck:", "").strip()
+                        continue
 
-                # Extract the query, unquote it to remove '+', and clean any extra params
-                raw_query = item.split("?q=")[-1]
-                clean_card_name = unquote(raw_query).replace('+', ' ').split('&')[0]
+                    # Extract the query, unquote it to remove '+', and clean any extra params
+                    raw_query = item.split("?q=")[-1]
+                    clean_card_name = unquote(raw_query).replace('+', ' ').split('&')[0]
 
-                status_text.text(f"Checking: {clean_card_name}...")
+                    status_text.text(f"Checking: {clean_card_name}...")
 
-                count = perform_search(driver, item, clean_card_name)
+                    count = perform_search(driver, item, clean_card_name)
 
-                if count > 0:
-                        results.append({
-                            "Card": clean_card_name,
-                            "Count": count,
-                            "URL": item
-                        })
-                        # Update the status text with the most recent find
-                        status.write(f"✅ Found: {clean_card_name}")
+                    if count > 0:
+                            results.append({
+                                "Card": clean_card_name,
+                                "Count": count,
+                                "URL": item
+                            })
+                            # Update the status text with the most recent find
+                            status.write(f"✅ Found: {clean_card_name}")
 
-                        # Update the table placeholder in real-time
-                        table_placeholder.table(results)
+                            # Update the table placeholder in real-time
+                            table_placeholder.table(results)
 
                 status.update(label="Search Complete!", state="complete", expanded=False)
             driver.quit()
