@@ -133,17 +133,19 @@ with tab2:
 if st.button("🔍 Check Availability"):
     input_links = process_input(user_input, shop_handle, uploaded_file)
     
-    if not input_links:
-        st.warning("Please provide card names or a file.")
-    else:
+    if input_links:
         driver = setup_webdriver()
         if driver:
             results = []
-            current_deck = "Uncategorized"
-            progress_bar = st.progress(0)
-            status_text = st.empty()
-            
-            for idx, item in enumerate(input_links):
+
+            # Create a 'Live' status container
+            with st.status("Searching cards...", expanded=True) as status:
+                st.write("Initializing browser...")
+
+                # We'll create a second placeholder specifically for the table
+                table_placeholder = st.empty()
+
+                for idx, item in enumerate(input_links):
                 if item.startswith("Deck:"):
                     current_deck = item.replace("Deck:", "").strip()
                     continue
@@ -157,23 +159,20 @@ if st.button("🔍 Check Availability"):
                 count = perform_search(driver, item, clean_card_name)
 
                 if count > 0:
-                    results.append({
-                        "Deck": current_deck,
-                        "Card": clean_card_name, # This is now the pretty version
-                        "Count": count,
-                        "URL": item
-                    })
+                        results.append({
+                            "Card": clean_card_name,
+                            "Count": count,
+                            "URL": item
+                        })
+                        # Update the status text with the most recent find
+                        status.write(f"✅ Found: {clean_card_name}")
 
-                progress_bar.progress((idx + 1) / len(input_links))
-                time.sleep(delay)
-            
+                        # Update the table placeholder in real-time
+                        table_placeholder.table(results)
+
+                status.update(label="Search Complete!", state="complete", expanded=False)
             driver.quit()
             status_text.success("Search Complete!")
-
-            if results:
-                st.subheader("Found Cards")
-                # Displaying as a clean table is often easier to read than expanders
-                st.table(results)
 
             else:
                 st.info("No cards from your list were found in stock.")
