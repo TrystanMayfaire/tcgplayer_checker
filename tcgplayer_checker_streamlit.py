@@ -33,12 +33,17 @@ def setup_webdriver():
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--disable-gpu")
 
-    # This helps locate the binary on Linux/Streamlit Cloud
-    if os.path.exists("/usr/bin/chromium-browser"):
-        chrome_options.binary_location = "/usr/bin/chromium-browser"
+    user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+    chrome_options.add_argument(f"user-agent={user_agent}")
+
+    chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    chrome_options.add_experimental_option('useAutomationExtension', False)
 
     try:
         driver = webdriver.Chrome(options=chrome_options)
+        driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+            "source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
+        })
         driver.set_page_load_timeout(INITIAL_PAGE_LOAD_TIMEOUT)
         return driver
     except Exception as e:
@@ -72,13 +77,16 @@ def perform_search(driver, url, card_name):
     try:
         driver.get(url)
 
-        # 1. Wait for the live region to be present
+        # Wait for the body of the page to load
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+
+        # Wait for the live region to be present
         result_element = WebDriverWait(driver, DYNAMIC_WAIT_TIMEOUT).until(
             EC.presence_of_element_located(DYNAMIC_LOAD_LOCATOR)
         )
 
-        # 2. Poll until the text actually contains a number
-        # We look for "results" or "result" in the text to confirm it's loaded
+        # Poll until the text actually contains a number
+        # Look for "results" or "result" in the text to confirm it's loaded
         poll_start_time = time.time()
         while time.time() - poll_start_time < UPDATE_POLL_TIMEOUT:
             current_text = result_element.text.lower()
