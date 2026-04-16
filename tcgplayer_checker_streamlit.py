@@ -170,7 +170,7 @@ if st.button("🔍 Check Availability"):
                 cards_processed += 1
 
                 # Update the status bar label with the (X of Y) counter
-                status_container.update(label=f"Searching cards ({cards_processed} of {total_cards})..."
+                status_container.update(label=f"Searching cards ({cards_processed} of {total_cards})...",
                                         state="running",
                                         expanded=True)
                 
