@@ -139,7 +139,7 @@ if st.button("🔍 Check Availability"):
         driver = setup_webdriver()
         if driver:
             results = []
-            current_deck = "Uncategorized"
+            current_deck_name = "Uncategorized"
 
             # Ongoing search information
             status_container = st.status("Searching cards...", expanded=True)
@@ -155,7 +155,7 @@ if st.button("🔍 Check Availability"):
 
             for idx, item in enumerate(input_links):
                 if item.startswith("Deck:"):
-                    current_deck = item.replace("Deck:", "").strip()
+                    current_deck_name = item.replace("Deck:", "").strip()
                     deck_display.markdown(f"📂 **Deck: {current_deck}**")
                     continue
 
