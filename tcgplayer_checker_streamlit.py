@@ -141,43 +141,47 @@ if st.button("🔍 Check Availability"):
             results = []
             current_deck = "Uncategorized"
 
-            # 1. Create a status container for the log
-            # 2. Create an empty placeholder for the results table
-            with st.status("Searching cards...", expanded=True) as status_container:
-                table_placeholder = st.empty()
-                progress_bar = st.progress(0)
+            # 1. This stays at the top
+            status_container = st.status("Searching cards...", expanded=True)
 
-                for idx, item in enumerate(input_links):
-                    if item.startswith("Deck:"):
-                        current_deck = item.replace("Deck:", "").strip()
-                        status_container.write(f"📂 Switching to Deck: **{current_deck}**")
-                        continue
+            # 2. This creates a permanent spot BELOW the status bar
+            table_placeholder = st.empty()
 
-                    # Clean the name for display
-                    raw_query = item.split("?q=")[-1]
-                    clean_card_name = unquote(raw_query).replace('+', ' ').split('&')[0]
+            # 3. Progress bar can go inside the status or above the table
+            progress_bar = st.progress(0)
 
-                    # Log progress inside the status box
-                    status_container.write(f"Searching for: {clean_card_name}...")
+            for idx, item in enumerate(input_links):
+                if item.startswith("Deck:"):
+                    current_deck = item.replace("Deck:", "").strip()
+                    status_container.write(f"📂 **Deck: {current_deck}**")
+                    continue
 
-                    count = perform_search(driver, item, clean_card_name)
+                raw_query = item.split("?q=")[-1]
+                clean_card_name = unquote(raw_query).replace('+', ' ').split('&')[0]
 
-                    if count > 0:
-                        results.append({
-                            "Deck": current_deck,
-                            "Card": clean_card_name,
-                            "Count": count,
-                            "URL": item
-                        })
-                        # Update the table immediately so the user sees results
-                        table_placeholder.table(results)
+                status_container.write(f"Checking: {clean_card_name}...")
 
-                    progress_bar.progress((idx + 1) / len(input_links))
-                    time.sleep(delay)
+                count = perform_search(driver, item, clean_card_name)
 
-                status_container.update(label="Search Complete!", state="complete", expanded=False)
+                if count > 0:
+                    results.append({
+                        "Deck": current_deck,
+                        "Card": clean_card_name,
+                        "Count": count,
+                        "URL": item
+                    })
+                    # Update the table placeholder (which is outside the status block)
+                    table_placeholder.table(results)
 
+                progress_bar.progress((idx + 1) / len(input_links))
+                time.sleep(delay)
+
+            # Update the status bar to "Complete" state
+            status_container.update(label="Search Complete!", state="complete", expanded=False)
             driver.quit()
 
-            if not results:
+            # Final persistence check
+            if results:
+                table_placeholder.table(results)
+            else:
                 st.info("No cards from your list were found in stock.")
