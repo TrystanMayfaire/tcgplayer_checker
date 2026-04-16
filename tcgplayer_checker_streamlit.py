@@ -174,5 +174,5 @@ if st.button("🔍 Check Availability"):
             driver.quit()
             status_text.success("Search Complete!")
 
-            else:
+            if count == 0:
                 st.info("No cards from your list were found in stock.")
