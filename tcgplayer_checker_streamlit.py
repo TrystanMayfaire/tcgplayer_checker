@@ -141,14 +141,14 @@ if st.button("🔍 Check Availability"):
             results = []
             current_deck = "Uncategorized"
 
-            # 1. This stays at the top
+            # Inform user search is starting
             status_container = st.status("Searching cards...", expanded=True)
 
-            # 2. This creates a permanent spot BELOW the status bar
-            table_placeholder = st.empty()
-
-            # 3. Progress bar can go inside the status or above the table
+            # Show progress bar
             progress_bar = st.progress(0)
+
+            # Initialize results table
+            table_placeholder = st.empty()
 
             for idx, item in enumerate(input_links):
                 if item.startswith("Deck:"):
@@ -171,7 +171,7 @@ if st.button("🔍 Check Availability"):
                         "URL": item
                     })
                     # Update the table placeholder (which is outside the status block)
-                    table_placeholder.table(results)
+                    table_placeholder.dataframe(results, use_container_width=True)
 
                 progress_bar.progress((idx + 1) / len(input_links))
                 time.sleep(delay)
@@ -182,6 +182,6 @@ if st.button("🔍 Check Availability"):
 
             # Final persistence check
             if results:
-                table_placeholder.table(results)
+                table_placeholder.dataframe(results, use_container_width=True)
             else:
                 st.info("No cards from your list were found in stock.")
