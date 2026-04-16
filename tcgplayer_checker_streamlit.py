@@ -71,19 +71,33 @@ def process_input(raw_text, shop_handle, uploaded_file=None):
 def perform_search(driver, url, card_name):
     try:
         driver.get(url)
+
+        # 1. Wait for the live region to be present
         result_element = WebDriverWait(driver, DYNAMIC_WAIT_TIMEOUT).until(
             EC.presence_of_element_located(DYNAMIC_LOAD_LOCATOR)
         )
-        
+
+        # 2. Poll until the text actually contains a number
+        # We look for "results" or "result" in the text to confirm it's loaded
         poll_start_time = time.time()
         while time.time() - poll_start_time < UPDATE_POLL_TIMEOUT:
-            match = re.search(r'\d+', result_element.text)
-            if match and int(match.group(0)) > 0:
-                return int(match.group(0))
+            current_text = result_element.text.lower()
+
+            # Check if the text has updated from empty/loading to a result count
+            if "result" in current_text:
+                match = re.search(r'\d+', current_text)
+                if match:
+                    return int(match.group(0))
+
             time.sleep(0.5)
+
+        # If we exit the loop without finding "result", it's likely truly 0
         return 0
-    except:
-        return -1 # Error state
+    except TimeoutException:
+        st.warning(f"Timeout searching for {card_name}. The site might be slow.")
+        return -1
+    except Exception as e:
+        return -1
 
 # --- UI LAYOUT ---
 st.set_page_config(page_title="TCGPlayer Inventory Checker", page_icon="🃏")
