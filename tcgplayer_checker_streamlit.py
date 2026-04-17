@@ -221,6 +221,23 @@ if st.button("🔍 Check Availability"):
 
             # Final persistence check
             if results:
-                table_placeholder.dataframe(results, use_container_width=True)
+                table_placeholder.data_editor(
+                    results,
+                    column_config={
+                        "URL": st.column_config.LinkColumn(
+                            "TCGPlayer Link",
+                            display_text="View on TCGPlayer",
+                            # This ensures it's treated as a link column
+                            validate=r"^https?://",
+                            width="medium"
+                        ),
+                        "Count": st.column_config.NumberColumn("In Stock", format="%d"),
+                        "Card": st.column_config.TextColumn("Card Name"),
+                        "Deck": st.column_config.TextColumn("Deck Name")
+                    },
+                    hide_index=True,
+                    use_container_width=True,
+                    disabled=True # Keeps it read-only for your friends
+                )
             else:
                 st.info("No cards from your list were found in stock.")
