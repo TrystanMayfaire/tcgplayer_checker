@@ -110,7 +110,10 @@ def perform_search(driver, url, card_name):
 # --- UI LAYOUT ---
 st.set_page_config(page_title="TCGPlayer Inventory Checker", page_icon="🃏")
 st.title("🃏 TCGPlayer Inventory Checker")
-st.text_area("Select shop in settings on the left.")
+st.markdown("#### ⬅️ Select your shop in the sidebar to get started!")
+st.caption("You can also adjust the request delay if you encounter timeouts.")
+
+st.divider() # Adds a clean visual break before the input sections
 
 with st.sidebar:
     st.header("Settings")
