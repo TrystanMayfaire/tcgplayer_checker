@@ -160,6 +160,15 @@ if st.button("🔍 Check Availability"):
 
             # Initialize results table
             table_placeholder = st.empty()
+            table_config = {
+                "URL": st.column_config.LinkColumn(
+                    "TCGPlayer Link",
+                    display_text="View on TCGPlayer"
+                ),
+                "Count": st.column_config.NumberColumn("In Stock", format="%d"),
+                "Card": st.column_config.TextColumn("Card Name"),
+                "Deck": st.column_config.TextColumn("Deck Name")
+            }
 
             for idx, item in enumerate(input_links):
                 if item.startswith("Deck:"):
@@ -193,23 +202,11 @@ if st.button("🔍 Check Availability"):
                         "URL": item
                     })
                     # Update the table placeholder (which is outside the status block)
-                    table_placeholder.data_editor(
+                    table_placeholder.dataframe(
                         results,
-                        column_config={
-                            "URL": st.column_config.LinkColumn(
-                                "TCGPlayer Link",
-                                display_text="View on TCGPlayer",
-                                # This ensures it's treated as a link column
-                                validate=r"^https?://",
-                                width="medium"
-                            ),
-                            "Count": st.column_config.NumberColumn("In Stock", format="%d"),
-                            "Card": st.column_config.TextColumn("Card Name"),
-                            "Deck": st.column_config.TextColumn("Deck Name")
-                        },
+                        column_config=table_config,
                         hide_index=True,
-                        use_container_width=True,
-                        disabled=True # Keeps it read-only for your friends
+                        use_container_width=True
                     )
 
                 progress_bar.progress((idx + 1) / len(input_links))
@@ -218,26 +215,6 @@ if st.button("🔍 Check Availability"):
             # Update the status bar to "Complete" state
             status_container.update(label="Search Complete!", state="complete", expanded=False)
             driver.quit()
-
-            # Final persistence check
-            if results:
-                table_placeholder.data_editor(
-                    results,
-                    column_config={
-                        "URL": st.column_config.LinkColumn(
-                            "TCGPlayer Link",
-                            display_text="View on TCGPlayer",
-                            # This ensures it's treated as a link column
-                            validate=r"^https?://",
-                            width="medium"
-                        ),
-                        "Count": st.column_config.NumberColumn("In Stock", format="%d"),
-                        "Card": st.column_config.TextColumn("Card Name"),
-                        "Deck": st.column_config.TextColumn("Deck Name")
-                    },
-                    hide_index=True,
-                    use_container_width=True,
-                    disabled=True # Keeps it read-only for your friends
-                )
-            else:
+            
+            if not results:
                 st.info("No cards from your list were found in stock.")
