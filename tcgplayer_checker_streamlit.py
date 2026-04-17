@@ -110,6 +110,7 @@ def perform_search(driver, url, card_name):
 # --- UI LAYOUT ---
 st.set_page_config(page_title="TCGPlayer Inventory Checker", page_icon="🃏")
 st.title("🃏 TCGPlayer Inventory Checker")
+st.text_area("Select shop in settings on the left.")
 
 with st.sidebar:
     st.header("Settings")
