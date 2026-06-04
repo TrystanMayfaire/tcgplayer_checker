@@ -23,6 +23,7 @@ SHOPS = {
     "Cardboard Coliseum": "cardboardscoliseum",
     "Kassar's Games": "kassarsgames",
     "Guy on the Couch Games": "gotc",
+    "The Board Room": "theboardroom",
     "Custom...": "custom"
 }
 
