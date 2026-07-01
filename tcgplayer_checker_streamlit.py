@@ -119,8 +119,12 @@ def perform_search(driver, url, card_name, traget_game_slug=None):
                 lines = card_text.split('\n')
                 if lines:
                     title = lines[0].strip()
-                    if title == search_term:
-                        match_count += 1
+                    if target_game_slug == 'magic':
+                        if title == search_term:
+                            match_count += 1
+                    else:
+                        if search_term in title:
+                            match_count += 1
             except Exception as item_error:
                 continue
 
