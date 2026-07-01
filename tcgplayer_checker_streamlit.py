@@ -96,7 +96,7 @@ def perform_search(driver, url, card_name, traget_game_slug=None):
             return 0
 
         match_count = 0
-        search_term = card_name.lower().strip()
+        search_clean = card_name.lower().strip()
 
         for link in card_items:
             try:
@@ -106,33 +106,28 @@ def perform_search(driver, url, card_name, traget_game_slug=None):
                     if href:
                         if f"/catalog/{target_game_slug}/" not in href:
                             continue
-                label_text = link.get_attribute("aria-label")
-                if label_text:
-                    title_lower = label_text.lower()
+                name_element = link.find_element(By.CLASS_NAME, "search-results-cards__name")
+                title_clean = name_element.text.strip().lower()
 
-                    # Filter out art cards unless explicitly requested
-                    if "art series" in title_lower or "art card" in title_lower:
-                        if "art series" not in search_term or "art card" not in search_term:
+                if not title_clean:
+                    continue
+
+                if target_game_slug == 'magic':
+                    if "art series" in title_clean or "art card" in title_clean:
+                        if "art series" not in search_clean and "art card" not in search_clean:
                             continue
 
-                card_text = link.text
-                if not card_text:
-                    continue
-                lines = [line.strip().lower() for line in card_text.split('\n') if line.strip()]
-                if lines:
-                    title = lines[0].strip()
-                    search_clean = search_term.strip().lower()
+                    # Escape any special symbols in the card name (e.g., "Asmoranomardicadaistinaculdacar")
+                    escaped_search = re.escape(search_clean)
+                    magic_pattern = rf"(?:^|[\-\(\:\s\/\,]){escaped_search}(?:$|[\-\)\:\s\/\,])"
 
-                    if target_game_slug == 'magic':
-                        # Escape any special symbols in the card name (e.g., "Asmoranomardicadaistinaculdacar")
-                        escaped_search = re.escape(search_clean)
-                        magic_pattern = rf"(?:^|[\-\(\:\s\/\,]){escaped_search}(?:$|[\-\)\:\s\/\,])"
-
-                        if re.search(magic_pattern, title_clean):
-                            match_count += 1
-                    else:
-                        if search_term in title:
-                            match_count += 1
+                    if re.search(magic_pattern, title_clean):
+                        match_count += 1
+                else:
+                    sanitized_title = re.sub(r'[^a-z0-9\s]', '', title_clean)
+                    sanitized_search = re.sub(r'[^a-z0-9\s]', '', search_clean)
+                    if sanitized_search in sanitized_title:
+                        match_count += 1
             except Exception as item_error:
                 continue
 
