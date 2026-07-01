@@ -11,6 +11,11 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, WebDriverException
 from docx import Document
 
+if "search_results" not in st.session_state:
+    st.session_state.search_results = []
+if "is_searching" not in st.session_state:
+    st.session_state.is_searching = False
+
 # --- CONFIGURATION ---
 DYNAMIC_WAIT_TIMEOUT = 15
 UPDATE_POLL_TIMEOUT = 2
@@ -74,34 +79,46 @@ def process_input(raw_text, shop_handle, uploaded_file=None):
         links.append(format_card_link(line, shop_handle))
     return links
 
-def perform_search(driver, url, card_name):
+def perform_search(driver, url, card_name, traget_game_slug=None):
     try:
         driver.get(url)
 
         # Wait for the body of the page to load
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located(
+            (By.CSS_SELECTOR, 'div.search-results-cards[loading="false"]')))
 
-        # Wait for the live region to be present
-        result_element = WebDriverWait(driver, DYNAMIC_WAIT_TIMEOUT).until(
-            EC.presence_of_element_located(DYNAMIC_LOAD_LOCATOR)
-        )
+        # Grab all individual card wrappers inside that container
+        card_items = driver.find_elements(By.CLASS_NAME, "search-results-cards__card")
 
-        # Poll until the text actually contains a number
-        # Look for "results" or "result" in the text to confirm it's loaded
-        poll_start_time = time.time()
-        while time.time() - poll_start_time < UPDATE_POLL_TIMEOUT:
-            current_text = result_element.text.lower()
+        # If no cards are found, stock is 0
+        if not card_items:
+            return 0
 
-            # Check if the text has updated from empty/loading to a result count
-            if "result" in current_text:
-                match = re.search(r'\d+', current_text)
-                if match:
-                    return int(match.group(0))
+        match_count = 0
+        search_term = card_name.lower().strip()
 
-            time.sleep(0.5)
+        for link in card_items:
+            if target_game_slug:
+                href = link.get_attribute("href")
+                if href:
+                    if f"/catalog/{target_game_slug}/" not in href:
+                        continue
+            label_text = link.get_attribute("aria-label")
+            if label_text:
+                title_lower = label_text.lower()
 
-        # If we exit the loop without finding "result", it's likely truly 0
-        return 0
+                # Filter out art cards unless explicitly requested
+                if "art series" in title_lower or "art card" in title_lower:
+                    if "art series" not in search_term or "art card" not in search_term:
+                        continue
+
+            card_text = link.text.lower().strip()
+            lines = card_text.split('\n')
+            if lines:
+                title = lines[0].strip()
+                if title == search_term:
+                    match_count += 1
+
     except TimeoutException:
         st.warning(f"Timeout searching for {card_name}. The site might be slow.")
         return -1
@@ -123,7 +140,21 @@ with st.sidebar:
         shop_handle = st.text_input("Enter Shop Handle (e.g., 'fourhorsemen')")
     else:
         shop_handle = SHOPS[shop_choice]
-    
+
+    game_choice = st.selectbox(
+        "Filter by Game",
+        ["All Games", "Magic: The Gathering", "Yu-Gi-Oh!", "Disney Lorcana", "Pokémon"]
+    )
+
+    # Map human choices to the exact text TCGPlayer uses in their URL href paths
+    GAME_MAPPING = {
+        "Magic: The Gathering": "magic",
+        "Yu-Gi-Oh!": "yugioh",
+        "Disney Lorcana": "disney-lorcana",
+        "Pokémon": "pokemon"
+    }
+    target_game_slug = GAME_MAPPING.get(game_choice, None)
+
     delay = st.slider("Request Delay (seconds)", 1, 10, 4)
     st.info("Check 'Decks' mode by including 'Deck: [Name]' in your list.")
 
