@@ -115,12 +115,20 @@ def perform_search(driver, url, card_name, traget_game_slug=None):
                         if "art series" not in search_term or "art card" not in search_term:
                             continue
 
-                card_text = link.text.lower().strip()
-                lines = card_text.split('\n')
+                card_text = link.text
+                if not card_text:
+                    continue
+                lines = [line.strip().lower() for line in card_text.split('\n') if line.strip()]
                 if lines:
                     title = lines[0].strip()
+                    search_clean = search_term.strip().lower()
+
                     if target_game_slug == 'magic':
-                        if title == search_term:
+                        # Escape any special symbols in the card name (e.g., "Asmoranomardicadaistinaculdacar")
+                        escaped_search = re.escape(search_clean)
+                        magic_pattern = rf"(?:^|[\-\(\:\s\/\,]){escaped_search}(?:$|[\-\)\:\s\/\,])"
+
+                        if re.search(magic_pattern, title_clean):
                             match_count += 1
                     else:
                         if search_term in title:
