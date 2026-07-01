@@ -84,8 +84,9 @@ def perform_search(driver, url, card_name, traget_game_slug=None):
         driver.get(url)
 
         # Wait for the body of the page to load
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located(
-            (By.CSS_SELECTOR, 'div.search-results-cards[loading="false"]')))
+        WebDriverWait(driver, 15).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, 'div.search-results-cards[loading="false"]'))
+        )
 
         # Grab all individual card wrappers inside that container
         card_items = driver.find_elements(By.CLASS_NAME, "search-results-cards__card")
@@ -98,32 +99,37 @@ def perform_search(driver, url, card_name, traget_game_slug=None):
         search_term = card_name.lower().strip()
 
         for link in card_items:
-            if target_game_slug:
-                href = link.get_attribute("href")
-                if href:
-                    if f"/catalog/{target_game_slug}/" not in href:
-                        continue
-            label_text = link.get_attribute("aria-label")
-            if label_text:
-                title_lower = label_text.lower()
+            try:
+                if target_game_slug:
+                    href = link.get_attribute("href")
+                    if href:
+                        if f"/catalog/{target_game_slug}/" not in href:
+                            continue
+                label_text = link.get_attribute("aria-label")
+                if label_text:
+                    title_lower = label_text.lower()
 
-                # Filter out art cards unless explicitly requested
-                if "art series" in title_lower or "art card" in title_lower:
-                    if "art series" not in search_term or "art card" not in search_term:
-                        continue
+                    # Filter out art cards unless explicitly requested
+                    if "art series" in title_lower or "art card" in title_lower:
+                        if "art series" not in search_term or "art card" not in search_term:
+                            continue
 
-            card_text = link.text.lower().strip()
-            lines = card_text.split('\n')
-            if lines:
-                title = lines[0].strip()
-                if title == search_term:
-                    match_count += 1
+                card_text = link.text.lower().strip()
+                lines = card_text.split('\n')
+                if lines:
+                    title = lines[0].strip()
+                    if title == search_term:
+                        match_count += 1
+            except Exception as item_error:
+                continue
+
+        return match_count
 
     except TimeoutException:
         st.warning(f"Timeout searching for {card_name}. The site might be slow.")
-        return -1
+        return 0
     except Exception as e:
-        return -1
+        return 0
 
 # --- UI LAYOUT ---
 st.set_page_config(page_title="TCGPlayer Inventory Checker", page_icon="🃏")
