@@ -102,6 +102,7 @@ def perform_search(driver, url, card_name, traget_game_slug=None):
             try:
                 if target_game_slug:
                     href = link.get_attribute("href")
+                    print(f"HREF: {href}")
                     if href:
                         if f"/catalog/{target_game_slug}/" not in href:
                             continue
@@ -149,14 +150,15 @@ with st.sidebar:
 
     game_choice = st.selectbox(
         "Filter by Game",
-        ["All Games", "Magic: The Gathering", "Yu-Gi-Oh!", "Disney Lorcana", "Pokémon"]
+        ["All Games", "Magic: The Gathering", "Star Wars Unlimited", "Yu-Gi-Oh!", "Disney Lorcana", "Pokémon"]
     )
 
     # Map human choices to the exact text TCGPlayer uses in their URL href paths
     GAME_MAPPING = {
         "Magic: The Gathering": "magic",
+        "Star Wars Unlimited": "star-wars-unlimited",
         "Yu-Gi-Oh!": "yugioh",
-        "Disney Lorcana": "disney-lorcana",
+        "Disney Lorcana": "lorcana-tcg",
         "Pokémon": "pokemon"
     }
     target_game_slug = GAME_MAPPING.get(game_choice, None)
